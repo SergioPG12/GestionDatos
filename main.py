@@ -30,20 +30,15 @@ commit_url = 'https://api.github.com/repos/{}/{}/commits/{}'
 user = 'sourcegraph'
 project = 'sourcegraph'
 
-# Fecha de inicio
-since_date = datetime(2019, 1, 1)
-
-# Obtener el último commit SHA procesado
-last_commit_record = collCommits.find_one({}, sort=[('_id', -1)])
-last_commit_sha = last_commit_record['sha'] if last_commit_record else None
-
-# Formato de fecha para la API de GitHub
-since_str = since_date.strftime('%Y-%m-%dT%H:%M:%SZ')
+# Obtener el commit más antiguo procesado
+oldest_commit_record = collCommits.find_one({}, sort=[('commit.committer.date', 1)])
+oldest_commit_sha = oldest_commit_record['sha'] if oldest_commit_record else None
 
 page = 1
+found_oldest_commit = False if oldest_commit_sha else True
 while True:
     url = repos_url.format(user, project, page, 100)
-    query = {'client_id': client_id, 'client_secret': client_secret, 'since': since_str}
+    query = {'client_id': client_id, 'client_secret': client_secret}
     r = requests.get(url, params=query, headers=headers)
     if r.status_code == 403:
         print("Rate limit exceeded. Sleeping for a minute...")
@@ -53,13 +48,17 @@ while True:
     if not commits_dict:  # Si la lista está vacía, hemos llegado al final
         break
     for commit in commits_dict:
+        commit_sha = commit['sha']
+        if commit_sha == oldest_commit_sha:
+            # Si encontramos el commit más antiguo procesado, comenzamos a procesar los siguientes commits
+            found_oldest_commit = True
+            continue
+        if not found_oldest_commit:
+            # Si aún no hemos encontrado el commit más antiguo procesado, saltamos este commit
+            continue
         commit['projectId'] = project
         print(str(commit))
         # Obtener información adicional del commit
-        commit_sha = commit['sha']
-        if commit_sha == last_commit_sha:
-            # Si encontramos el último commit procesado, terminamos
-            break
         commit_info_url = commit_url.format(user, project, commit_sha)
         r = requests.get(commit_info_url, headers=headers)
         commit_info = r.json()
@@ -72,8 +71,4 @@ while True:
         else:
             commit['stats'] = []
         collCommits.insert_one(commit)
-    else:
-        # Si no se encontró el último commit procesado, continuamos con la siguiente página
-        page += 1
-        continue
-    break  # Terminamos el bucle si encontramos el último commit procesado
+    page += 1
