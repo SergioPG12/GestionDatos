@@ -10,7 +10,7 @@ client_id = 'e7983846c4408e5ad01c'
 client_secret = '6d4302cf6d2eeeb2644551b2d579db110f5ccfff'
 headers = {'Authorization': 'Bearer '+token, 'Accept': 'application/vnd.github+json'}
 
-uri = "mongodb+srv://admin:ynxfWVMa1xYyNShY@gestiondedatos.phpxq3k.mongodb.net/?retryWrites=true&w=majority&appName=GestiondeDatos"
+uri = "mongodb://localhost:27017"
 
 # Create a new client and connect to the server
 connection = MongoClient(uri, server_api=ServerApi('1'))
@@ -72,3 +72,4 @@ while True:
             commit['stats'] = []
         collCommits.insert_one(commit)
     page += 1
+ 
