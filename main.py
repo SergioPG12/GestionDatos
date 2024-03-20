@@ -24,8 +24,9 @@ except Exception as e:
 
 # Conexión a MongoDB
 collCommits = connection["GestiondeDatos"]["Commits"]
+since='2019-01-01T00:00:00Z'
 
-repos_url = 'https://api.github.com/repos/{}/{}/commits?page={}&per_page={}'
+repos_url = 'https://api.github.com/repos/{}/{}/commits?page={}&per_page={}&since={since}'
 commit_url = 'https://api.github.com/repos/{}/{}/commits/{}'
 user = 'sourcegraph'
 project = 'sourcegraph'
@@ -37,7 +38,7 @@ oldest_commit_sha = oldest_commit_record['sha'] if oldest_commit_record else Non
 page = 1
 found_oldest_commit = False if oldest_commit_sha else True
 while True:
-    url = repos_url.format(user, project, page, 100)
+    url = repos_url.format(user, project, page, 100, since=since)
     query = {'client_id': client_id, 'client_secret': client_secret}
     r = requests.get(url, params=query, headers=headers)
     if r.status_code == 403:
@@ -72,4 +73,3 @@ while True:
             commit['stats'] = []
         collCommits.insert_one(commit)
     page += 1
- 
