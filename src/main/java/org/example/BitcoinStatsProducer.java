@@ -13,7 +13,10 @@ import org.json.JSONObject;
 
 public class BitcoinStatsProducer {
     public static void main(String[] args) throws Exception {
+        // Nombre del tema en Kafka donde se publicarán las estadísticas de Bitcoin.
         String topicName = "bitcoinStats";
+
+        // Configuración de las propiedades del productor de Kafka.
         Properties props = new Properties();
         props.put("bootstrap.servers", "localhost:9092");
         props.put("acks", "all");
@@ -24,7 +27,10 @@ public class BitcoinStatsProducer {
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
+        // Creación del productor Kafka.
         Producer<String, String> producer = new KafkaProducer<>(props);
+
+        // Creación de un temporizador para enviar datos periódicamente.
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             private final OkHttpClient client = new OkHttpClient();
@@ -32,6 +38,7 @@ public class BitcoinStatsProducer {
             @Override
             public void run() {
                 try {
+                    // Recuperación y envío de los datos del precio y la tasa de hash de Bitcoin.
                     String bitcoinPrice = fetchBitcoinPrice();
                     double bitcoinHashRate = fetchBitcoinHashRate();
                     String message = String.format("{\"time\":\"%d\", \"price\":%s, \"hashRate\":%.2f}",
@@ -43,6 +50,7 @@ public class BitcoinStatsProducer {
                 }
             }
 
+            // Método para obtener el precio actual de Bitcoin desde la API de CoinDesk.
             private String fetchBitcoinPrice() throws Exception {
                 Request request = new Request.Builder()
                         .url("https://api.coindesk.com/v1/bpi/currentprice.json")
@@ -53,6 +61,7 @@ public class BitcoinStatsProducer {
                 }
             }
 
+            // Método para obtener la tasa de hash actual de Bitcoin desde la API de Blockchain.info.
             private double fetchBitcoinHashRate() throws Exception {
                 Request request = new Request.Builder()
                         .url("https://api.blockchain.info/stats")
@@ -62,6 +71,6 @@ public class BitcoinStatsProducer {
                     return jsonObject.getDouble("hash_rate");
                 }
             }
-        }, 0, 1000);
+        }, 0, 1000); // Programación del temporizador para ejecutarse cada segundo.
     }
 }
