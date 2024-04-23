@@ -5,9 +5,9 @@ from datetime import datetime
 import time
 
 username = 'juankisuelamartin'
-token = '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'
-client_id = 'e7983846c4408e5ad01c'
-client_secret = '6d4302cf6d2eeeb2644551b2d579db110f5ccfff'
+token = ''
+client_id = ''
+client_secret = ''
 headers = {'Authorization': 'Bearer '+token, 'Accept': 'application/vnd.github+json'}
 
 uri = "mongodb://localhost:27017"
